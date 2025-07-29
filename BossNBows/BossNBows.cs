@@ -22,7 +22,7 @@ namespace BossNBows
     {
         public const string PluginGUID = "com.jotunn.BossNBows";
         public const string PluginName = "BossNBows";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
 
         public static CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
 
@@ -36,6 +36,8 @@ namespace BossNBows
         public static CustomStatusEffect LightningShotStatusEffect;
 
         public static ConfigEntry<bool> EnableDash;
+        public static ConfigEntry<KeyboardShortcut> BowModeKey;
+
 
 
         private void Awake()
@@ -54,8 +56,9 @@ namespace BossNBows
 
         private void CreateConfig()
         {
-            EnableDash = Config.Bind("Client Settings", "EnableDash", true,
-                new ConfigDescription("Enable dash ability (local client setting)"));
+            EnableDash = Config.Bind("Dash Mode", "EnableDash", true,new ConfigDescription("Enable dash ability (local client setting)"));
+
+            BowModeKey = Config.Bind("Bow Mode Shortcut", "Bow Mode Shortcut", new KeyboardShortcut(KeyCode.G), new ConfigDescription("Shortcut for bow mode", null, new ConfigurationManagerAttributes { IsAdminOnly = false }));
         }
 
         public static class BossNBowsConfig
@@ -589,6 +592,20 @@ namespace BossNBows
             
         }
 
+        private static bool IsKeyDown(KeyboardShortcut shortcut)
+        {
+            if (shortcut.Equals(default)) return false;
+            if (!Input.GetKeyDown(shortcut.MainKey)) return false;
+
+            foreach (var mod in shortcut.Modifiers)
+            {
+                if (!Input.GetKey(mod)) return false;
+            }
+
+            return true;
+        }
+
+
         [HarmonyPatch(typeof(Player), nameof(Player.Update))]
         public static class BowModeInputPatch
         {
@@ -617,7 +634,7 @@ namespace BossNBows
                     return;
                 }
 
-                if (ZInput.GetKeyDown(KeyCode.G))
+                if (IsKeyDown(BossNBows.BowModeKey.Value))
                 {
                     BowFireModeManager.CycleMode(__instance);
 
