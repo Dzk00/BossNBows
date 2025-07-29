@@ -41,4 +41,4 @@ To all the Jotunn team for all the tutorials and examples.
 Here => [https://github.com/Dzk00/BossNBows/issues](https://github.com/Dzk00/BossNBows/issues) <br>
 You can contact me on the Valkream Serveur Discord => [https://discord.gg/zn3TsumtyG](https://discord.gg/zn3TsumtyG)
 
-### This is my first mod ever, hope you'll enjoy it !
+### Enjoy it !
