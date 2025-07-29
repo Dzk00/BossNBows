@@ -412,3 +412,6 @@ publish_debug.sh
 publish_release.sh 
 rename.sh 
 RenameSolution.ps1 
+BossNBows/AssetsEmbedded/AssetsEmbedded
+BossNBows/AssetsEmbedded/AssetsEmbedded.manifest 
+BossNBows/AssetsEmbedded/bossnbows.manifest 
