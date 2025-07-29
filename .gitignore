@@ -404,4 +404,11 @@ FodyWeavers.xsd
 package/
 README.md
 BossNBowsUnity/
-
+DoPrebuild.props
+environment.props
+LICENSE
+publish.ps1
+publish_debug.sh
+publish_release.sh 
+rename.sh 
+RenameSolution.ps1 
