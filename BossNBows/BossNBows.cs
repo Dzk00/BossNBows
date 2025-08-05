@@ -22,7 +22,7 @@ namespace BossNBows
     {
         public const string PluginGUID = "com.jotunn.BossNBows";
         public const string PluginName = "BossNBows";
-        public const string PluginVersion = "1.0.1";
+        public const string PluginVersion = "1.0.2";
 
         public static CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
 
