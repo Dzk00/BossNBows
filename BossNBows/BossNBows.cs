@@ -7,6 +7,8 @@ using Jotunn.Managers;
 using Jotunn.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
@@ -22,7 +24,7 @@ namespace BossNBows
     {
         public const string PluginGUID = "com.jotunn.BossNBows";
         public const string PluginName = "BossNBows";
-        public const string PluginVersion = "1.0.2";
+        public const string PluginVersion = "1.0.3";
 
         public static CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
 
@@ -512,33 +514,68 @@ namespace BossNBows
         private void AddLocalizations()
         {
             var localization = LocalizationManager.Instance.GetLocalization();
+            string configRoot = BepInEx.Paths.ConfigPath;
 
-            string basePath = System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "BossNBowsTranslation");
-
-            if (!System.IO.Directory.Exists(basePath))
+            if (!Directory.Exists(configRoot))
             {
-                Jotunn.Logger.LogWarning($"Localization directory not found: {basePath}");
+                Jotunn.Logger.LogWarning($"Config path not found: {configRoot}");
                 return;
             }
 
-            foreach (var file in System.IO.Directory.GetFiles(basePath, "*.json"))
+            var vpDirs = Directory.EnumerateDirectories(configRoot, "*", SearchOption.AllDirectories)
+                .Where(dir => string.Equals(Path.GetFileName(dir), "BossNBows", StringComparison.OrdinalIgnoreCase))
+                .Select(dir => new { Path = dir, Depth = dir.TrimEnd(Path.DirectorySeparatorChar).Count(c => c == Path.DirectorySeparatorChar) })
+                .OrderBy(x => x.Depth).ThenBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+                .Select(x => x.Path)
+                .ToList();
+
+            if (vpDirs.Count == 0)
             {
-                string language = System.IO.Path.GetFileNameWithoutExtension(file);
-                try
-                {
-                    string jsonContent = System.IO.File.ReadAllText(file);
-                    var translations = SimpleJson.SimpleJson.DeserializeObject<Dictionary<string, string>>(jsonContent);
+                Jotunn.Logger.LogWarning($"No 'BossNBows' directory for translations found anywhere under: {configRoot}");
+                return;
+            }
 
-                    foreach (var entry in translations)
+            var loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var dir in vpDirs)
+            {
+                foreach (var file in Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories)
+                                               .OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (!loadedFiles.Add(file))
+                        continue;
+
+                    string language = Path.GetFileNameWithoutExtension(file);
+
+                    try
                     {
-                        localization.AddTranslation(language, entry.Key, entry.Value);
-                    }
+                        string jsonContent = File.ReadAllText(file);
+                        var translations = SimpleJson.SimpleJson.DeserializeObject<Dictionary<string, string>>(jsonContent);
 
-                    Jotunn.Logger.LogInfo($"Loaded localization for {language}");
-                }
-                catch (Exception ex)
-                {
-                    Jotunn.Logger.LogError($"Failed to load localization from {file}: {ex.Message}");
+                        if (translations == null)
+                        {
+                            Jotunn.Logger.LogWarning($"Empty or invalid JSON in {file}");
+                            continue;
+                        }
+
+                        int added = 0;
+                        foreach (var kv in translations)
+                        {
+                            try
+                            {
+                                localization.AddTranslation(language, kv.Key, kv.Value);
+                                added++;
+                            }
+                            catch (Exception keyEx)
+                            {
+                                Jotunn.Logger.LogWarning($"Could not add key '{kv.Key}' from {file}: {keyEx.Message}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Jotunn.Logger.LogError($"Failed to load localization from {file}: {ex.Message}");
+                    }
                 }
             }
         }
